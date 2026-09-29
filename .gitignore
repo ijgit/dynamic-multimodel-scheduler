@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# MPK build outputs: launcher .so, generated .cu, task graph JSON (up to ~850 MB each), lock files
+**/02_mpk/out/
+# ad-hoc single runs (sweep.py writes results/ instead)
+**/01_torch/out/
+
+# nsys raw reports (the summaries are kept in results/<backend>/<tag>/nsys/metrics.json)
+*.nsys-rep
+*.qdrep
+*.qdstrm
+*.sqlite
+
+# run logs
+**/results/logs/
+*.log

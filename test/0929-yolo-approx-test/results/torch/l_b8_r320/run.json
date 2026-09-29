@@ -1,0 +1,44 @@
+{
+ "backend": "torch",
+ "dag": {
+  "tag": "l_b8_r320",
+  "model": "l",
+  "batch": 8,
+  "res": 320,
+  "n_gemms": 98,
+  "n_residual": 40,
+  "tasks": 181344,
+  "gflop": 103.481868288,
+  "real_gflop": 96.33792,
+  "flop_ratio": 1.0741551020408164,
+  "weight_mb": 73.760768,
+  "act_mb": 384.499712,
+  "row_padding": 0.00035190615835767325,
+  "n_shapes": 18,
+  "mpk_queue_len": 8192
+ },
+ "dag_sha": "9e80ca4a10e5",
+ "gpu": {
+  "name": "NVIDIA GeForce RTX 3090",
+  "sms": 82,
+  "cuda_visible_devices": "6",
+  "torch": "2.7.1+cu118"
+ },
+ "timing": {
+  "iters": 150,
+  "wall_ms": 522.7350329514593,
+  "wall_per_iter_ms": 3.4849002196763954,
+  "median_ms": 3.482624053955078,
+  "min_ms": 3.31878399848938,
+  "mean_ms": 3.482733481725057,
+  "p90_ms": 3.4856960773468018,
+  "max_ms": 3.6659200191497803
+ },
+ "check": {
+  "passed": true,
+  "tol": 0.05,
+  "worst_rel": 0.016323506832122803,
+  "worst_gemm": "model.9.cv2.p1",
+  "output_rel": 0.015950966626405716
+ }
+}
