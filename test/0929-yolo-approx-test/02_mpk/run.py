@@ -27,8 +27,7 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "common"))
-sys.path.insert(0, "/workspace/toyota/test/0928/tools")
-import mpk_common as C  # noqa: E402  (0928: CUDA 12 nvcc, c++17 pin, mpk_params)
+import mpk_common as C  # noqa: E402  (common/: CUDA 12 nvcc, c++17 pin, mpk_params)
 
 C.setup()
 import torch  # noqa: E402

@@ -1,4 +1,4 @@
-# YOLO26 백본을 GEMM만 있는 DAG로: torch 실행 vs MPK 실행 (test/0929-yolo-gemm-dag)
+# YOLO26 백본을 GEMM만 있는 DAG로: torch 실행 vs MPK 실행 (dynamic-multimodel-scheduler/test/0929-yolo-approx-test)
 
 YOLO26 backbone(layer 0–9)의 구조(채널 수, 블록 반복, 분기와 합류, shortcut)를 실제 Ultralytics 모델에서
 가져와 **GEMM만으로 된 DAG**를 만든다. 모델 크기 {n, m, l} × batch {1, 8} × 입력 {240, 320, 640}²의
@@ -33,7 +33,7 @@ sweep.py           18 조합 × 3 backend 실행 + nsys ──> collect.py ─�
 읽으며 출력과 residual은 버퍼 전체를 `[M, N]`으로 본다. 실행기는 conv를 모르고 GPU에서는 GEMM만 돈다
 (im2col, pooling, 정규화, 활성 함수 없음).
 
-conv를 GEMM으로 바꾸는 규칙(이전 실험 `_0929-yolo-approximation`과 같은 규칙). 픽셀 묶기:
+conv를 GEMM으로 바꾸는 규칙(이전 실험 `_0929-yolo-approximation`과 같은 규칙, 이 저장소에는 없음). 픽셀 묶기:
 `[rows, C]`를 `[rows/g, g·C]`로 보면 GEMM 한 행에 연속한 픽셀 g개가 들어가고, dense 가중치
 `W[g·Cout, g·Cin]`이면 출력 픽셀 하나가 그 묶음의 입력 픽셀 g개 모두에 의존한다.
 
@@ -131,7 +131,7 @@ ultralytics를 import하지 않는다(`arch/gen_arch.py`만 쓰고, 끝나면 �
 ## 5. 실행
 
 ```bash
-source /workspace/toyota/test/0929-yolo-gemm-dag/env.sh    # 0928/env.sh + common/ (GPU 6, $PY)
+source test/0929-yolo-approx-test/env.sh      # 저장소 루트에서; CUDA 12.0 nvcc, common/, GPU 6, $PY
 cd $T0929G
 $PY arch/gen_arch.py                    # (한 번) Ultralytics → arch/yolo26{n,m,l}.json, 실제 모델과 대조
 $PY common/dag.py                       # 18개 DAG → dags/ (GPU 불필요, 바뀌지 않은 파일은 그대로)
@@ -194,12 +194,13 @@ $PY collect.py                          # results/summary.md, results/summary.cs
 | `common/dag.py`, `dags/*.json`, `dags/summary.md` | conv DAG + (batch, res) → GEMM DAG, 가중치/입력 생성 |
 | `common/torch_exec.py` | DAG → `torch.mm`/`addmm` (`TorchDag`) |
 | `common/mpk_exec.py` | DAG → MPK PersistentKernel (view 우회, 큐 길이 overlay, 초기화 오류 확인) |
+| `common/mpk_common.py` | MPK 환경 설정(nvcc 12.0, c++17 고정), 컴파일/export, test_mode 파라미터 (0928/tools에서 가져옴) |
 | `common/runutil.py`, `common/nsys_metrics.py` | 공용 인자, 측정 루프, 비교 / nsys 두 번 실행과 집계 |
 | `01_torch/run.py`, `02_mpk/run.py` | 두 테스트 (`02_mpk/out/<tag>/`: task graph JSON, 생성된 .cu, launcher .so, `compile.json`) |
 | `sweep.py`, `collect.py` | 전체 실행, 표 |
 | `results/` | `summary.md`, `summary.csv`, backend별 `run.json` / `nsys/metrics.json`, `logs/` |
 
-이전 실험 `../_0929-yolo-approximation`과 비교하면 규칙과 GEMM shape은 같고, 다음이 다르다. 구조를 JSON으로
+이전 실험 `_0929-yolo-approximation`(이 저장소에는 없음)과 비교하면 규칙과 GEMM shape은 같고, 다음이 다르다. 구조를 JSON으로
 고정해 실제 모델과 대조한다. 조합별 DAG를 파일로 두고 실행기는 GEMM만 안다. torch eager는 view를 미리
 만들어 호출당 Python 시간이 줄었다(n_b1_r240: 1.39 → 0.59 ms, CUDA graph는 0.220 ms로 같음). cuDNN conv
 기준선은 뺐다. 컴파일과 실행을 나누고 GPU 독점을 지킨다.
